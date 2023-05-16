@@ -17,8 +17,8 @@ const colors = ['#7A306C', '#FFC145', '#FFFFFB', '#A10702', '#5AFF15']
 io.on('connection', (socket) => {
   console.log('a user connected')
   players[socket.id] = {
-    x: Math.floor(Math.random() * 600),
-    y: Math.floor(Math.random() * 600),
+    x: Math.floor(Math.random() * 300),
+    y: Math.floor(Math.random() * 300),
     color: colors[Math.floor(Math.random() * 5)],
     velocity: {
       x: 0,
@@ -31,7 +31,7 @@ io.on('connection', (socket) => {
 
   socket.on('FrontPlayer', (Players) => {
     players[socket.id] = Players
-    io.emit('updatePlayers', players)
+    io.emit('playersMove', players)
   })
   socket.on('FrontProjectiles', (projectiless) => {
     Backprojectiles = projectiless
@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
   })
 })
 
-server.listen('5000', () => {
+server.listen('5000', '192.168.246.26', () => {
   console.log('server is listening')
 })
 

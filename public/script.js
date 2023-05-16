@@ -3,7 +3,8 @@ let c = canvas.getContext('2d')
 
 canvas.width = 800
 canvas.height = 500
-const socket = io()
+let socket = io()
+
 let score = 0
 let speed = 7
 // if (speed < 7) {
@@ -37,16 +38,35 @@ socket.on('updatePlayers', (Players) => {
         },
         id
       )
-    } else {
-      players[id].velocity = {
-        x: Player.velocity.x,
-        y: Player.velocity.y,
-      }
     }
+    // else if (players[id] != Player) {
+    //   players[id].hp = Player.hp
+    //   players[id].x = Player.x
+    //   players[id].y = Player.y
+    //   players[id].raduis = Player.raduis
+    //   players[id].color = Player.color
+    //   players[id].velocity = {
+    //     x: Player.velocity.x,
+    //     y: Player.velocity.y,
+    //   }
+    //   players[id].id = Player.id
+    // }
   }
   for (const id in players) {
     if (!Players[id]) {
       delete players[id]
+    }
+  }
+})
+
+socket.on('playersMove', (Players) => {
+  for (const id in Players) {
+    const Player = Players[id]
+    if (players[id] != Player) {
+      players[id].velocity = {
+        x: Player.velocity.x,
+        y: Player.velocity.y,
+      }
     }
   }
 })
@@ -90,7 +110,6 @@ function animate() {
     }, 1)
     sent = true
   }
-
   projectiless.forEach((projectile, index) => {
     projectile.update()
     if (
@@ -105,20 +124,17 @@ function animate() {
   projectiless.forEach((projectile, index) => {
     for (const id in players) {
       const player = players[id]
-      // console.log(player)
 
-      if (player.id != socket.id) {
-        // console.log(player)
+      if (projectile.ownerId != player.id) {
         const dx = projectile.x - player.x
         const dy = projectile.y - player.y
         const distance = Math.sqrt(dx * dx + dy * dy)
 
         if (distance < player.raduis + projectile.raduis) {
-          projectiless.splice(index, 1)
+          projectiless.splice(index, 3)
 
           if (player.hp > 25) {
             player.getHit()
-            player.raduis -= 25
           } else {
             delete players[id]
           }
@@ -151,27 +167,33 @@ canvas.addEventListener('contextmenu', (e) => {
 
   socket.emit('FrontPlayer', players[socket.id])
 })
-
+let cooldown = 0
 window.addEventListener('click', (e) => {
-  const angle = Math.atan2(
-    e.clientY - players[socket.id].y,
-    e.clientX - players[socket.id].x
-  )
-  const velocity = {
-    x: Math.cos(angle) * speed,
-    y: Math.sin(angle) * speed,
-  }
-
-  projectiless.push(
-    new projectiles(
-      players[socket.id].x,
-      players[socket.id].y,
-      10,
-      players[socket.id].color,
-      velocity,
-      socket.id
+  if (cooldown == 0) {
+    cooldown = 1
+    const angle = Math.atan2(
+      e.clientY - players[socket.id].y,
+      e.clientX - players[socket.id].x
     )
-  )
-  socket.emit('FrontProjectiles', projectiless)
+    const velocity = {
+      x: Math.cos(angle) * speed,
+      y: Math.sin(angle) * speed,
+    }
+
+    projectiless.push(
+      new projectiles(
+        players[socket.id].x,
+        players[socket.id].y,
+        10,
+        players[socket.id].color,
+        velocity,
+        socket.id
+      )
+    )
+    socket.emit('FrontProjectiles', projectiless)
+    setTimeout(() => {
+      cooldown = 0
+    }, 500)
+  }
 })
 animate()

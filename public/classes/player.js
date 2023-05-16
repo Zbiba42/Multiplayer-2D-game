@@ -13,6 +13,8 @@ class player {
   }
   getHit() {
     this.hp -= 25
+    this.raduis -= 25
+    this.update()
   }
   draw() {
     c.beginPath()
